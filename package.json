@@ -1,0 +1,27 @@
+{
+  "name": "jsonapi",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "merge": "node merge-json.cjs",
+    "build": "npm install && node merge-json.cjs",
+    "merge-and-start": "node merge-json.cjs && node server.js"
+  },
+   "engines": {
+    "node": "18.x"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "json-server": "^0.17.4",
+    "nodemon": "^3.1.10"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}

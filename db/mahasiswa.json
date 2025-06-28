@@ -1,0 +1,22 @@
+[
+  { "id": "1", "nama": "Andi", "nim": "M001", "max_sks": 18 },
+  { "id": "2", "nama": "Budi", "nim": "M002", "max_sks": 20 },
+  { "id": "3", "nama": "Citra", "nim": "M003", "max_sks": 22 },
+  { "id": "4", "nama": "Dina", "nim": "M004", "max_sks": 18 },
+  { "id": "5", "nama": "Eko", "nim": "M005", "max_sks": 24 },
+  { "id": "6", "nama": "Fajar", "nim": "M006", "max_sks": 21 },
+  { "id": "7", "nama": "Gita", "nim": "M007", "max_sks": 20 },
+  { "id": "8", "nama": "Hani", "nim": "M008", "max_sks": 18 },
+  { "id": "9", "nama": "Iwan", "nim": "M009", "max_sks": 20 },
+  { "id": "10", "nama": "Joko", "nim": "M010", "max_sks": 18 },
+  { "id": "11", "nama": "Kiki", "nim": "M011", "max_sks": 24 },
+  { "id": "12", "nama": "Lia", "nim": "M012", "max_sks": 20 },
+  { "id": "13", "nama": "Maya", "nim": "M013", "max_sks": 18 },
+  { "id": "14", "nama": "Nina", "nim": "M014", "max_sks": 22 },
+  { "id": "15", "nama": "Oki", "nim": "M015", "max_sks": 20 },
+  { "id": "16", "nama": "Putri", "nim": "M016", "max_sks": 18 },
+  { "id": "17", "nama": "Qila", "nim": "M017", "max_sks": 18 },
+  { "id": "18", "nama": "Rudi", "nim": "M018", "max_sks": 21 },
+  { "id": "19", "nama": "Salsa", "nim": "M019", "max_sks": 18 },
+  { "id": "20", "nama": "Tino", "nim": "M020", "max_sks": 18 }
+]
