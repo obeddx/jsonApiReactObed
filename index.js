@@ -81,12 +81,8 @@ Object.keys(database).forEach(key => {
 
 // Routes spesifik (fallback jika dynamic routing bermasalah)
 app.get('/api/dosen', (req, res) => {
-  if (database.dosen) {
-    res.json({
-      success: true,
-      data: database.dosen,
-      count: Array.isArray(database.dosen) ? database.dosen.length : 1
-    });
+  if (database.dosen && database.dosen.length > 0) {
+    res.json(database.dosen);
   } else {
     res.status(404).json({
       error: 'Data dosen tidak ditemukan'
