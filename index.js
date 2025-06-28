@@ -28,7 +28,7 @@ try {
   console.error('Error loading database:', error);
 }
 
-// Helper function untuk membuat route yang aman
+// Helper function untuk membuat route yang aman - return simple array/data
 function createSafeRoute(key, data) {
   const safeKey = key.replace(/[^a-zA-Z0-9-_]/g, '');
   if (!safeKey) return null;
@@ -36,12 +36,14 @@ function createSafeRoute(key, data) {
   return {
     path: `/api/${safeKey}`,
     handler: (req, res) => {
-      res.json({
-        success: true,
-        endpoint: safeKey,
-        data: data,
-        count: Array.isArray(data) ? data.length : 1
-      });
+      // Return data langsung tanpa wrapper object
+      if (Array.isArray(data)) {
+        res.json(data);
+      } else if (data && typeof data === 'object') {
+        res.json(data);
+      } else {
+        res.json([]);
+      }
     }
   };
 }
@@ -81,25 +83,41 @@ Object.keys(database).forEach(key => {
 
 // Routes spesifik (fallback jika dynamic routing bermasalah)
 app.get('/api/dosen', (req, res) => {
-  if (database.dosen && database.dosen.length > 0) {
-    res.json(database.dosen);
-  } else {
-    res.status(404).json({
-      error: 'Data dosen tidak ditemukan'
+  try {
+    if (database.dosen && database.dosen.length > 0) {
+      // Return langsung array data
+      res.json(database.dosen);
+    } else {
+      res.status(404).json({
+        error: 'Data dosen tidak ditemukan'
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      error: 'Internal server error',
+      message: error.message
     });
   }
 });
 
 app.get('/api/matkul', (req, res) => {
-  if (database.matkul) {
-    res.json({
-      success: true,
-      data: database.matkul,
-      count: Array.isArray(database.matkul) ? database.matkul.length : 1
-    });
-  } else {
-    res.status(404).json({
-      error: 'Data matkul tidak ditemukan'
+  try {
+    if (database.matkul) {
+      // Return langsung data tanpa wrapper
+      if (Array.isArray(database.matkul)) {
+        res.json(database.matkul);
+      } else {
+        res.json(database.matkul);
+      }
+    } else {
+      res.status(404).json({
+        error: 'Data matkul tidak ditemukan'
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      error: 'Internal server error',
+      message: error.message
     });
   }
 });
