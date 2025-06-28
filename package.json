@@ -5,7 +5,8 @@
   "scripts": {
     "start": "node index.js",
     "dev": "node index.js",
-    "build": "node merge-json.cjs"
+    "build": "node merge-json.cjs",
+    "vercel-build": "node merge-json.cjs"
   },
   "engines": {
     "node": ">=18.x"
