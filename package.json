@@ -1,9 +1,10 @@
 {
   "name": "jsonapi",
   "version": "1.0.0",
-  "main": "index.js",
-  "scripts": {
+  "main": "api/index.js",
+ "scripts": {
     "start": "node server.js",
+    "dev": "nodemon server.js",
     "build": "node merge-json.cjs",
     "vercel-build": "node merge-json.cjs"
   },
