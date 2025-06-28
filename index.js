@@ -1,140 +1,159 @@
 const express = require('express');
+const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
 const { mergeJsonFiles } = require('./merge-json.cjs');
 
 const app = express();
-const port = 3001;
+const PORT = process.env.PORT || 3000;
 
 // Middleware
+app.use(cors());
 app.use(express.json());
-app.use(express.static('public'));
 
-// Path ke file database
-const dbFile = path.join(__dirname, 'db.json');
+// Generate db.json saat startup
+console.log('Generating database...');
+mergeJsonFiles();
 
-// Function untuk reload database
-function reloadDatabase() {
-  try {
-    if (fs.existsSync(dbFile)) {
-      const content = fs.readFileSync(dbFile, 'utf-8');
-      return JSON.parse(content);
-    }
-    return {};
-  } catch (error) {
-    console.error('Error loading database:', error.message);
-    return {};
-  }
-}
-
-// Inisialisasi database saat server start
-let db = {};
-
-function initializeDatabase() {
-  console.log('Initializing database...');
-  
-  // Merge JSON files terlebih dahulu
-  const mergeSuccess = mergeJsonFiles();
-  
-  if (mergeSuccess) {
-    db = reloadDatabase();
+// Load database
+let database = {};
+try {
+  const dbPath = path.join(__dirname, 'db.json');
+  if (fs.existsSync(dbPath)) {
+    database = JSON.parse(fs.readFileSync(dbPath, 'utf-8'));
     console.log('Database loaded successfully');
-  } else {
-    console.warn('Failed to merge JSON files, using empty database');
+    console.log('Available data:', Object.keys(database));
   }
+} catch (error) {
+  console.error('Error loading database:', error);
 }
 
-// API Routes
+// Helper function untuk membuat route yang aman
+function createSafeRoute(key, data) {
+  const safeKey = key.replace(/[^a-zA-Z0-9-_]/g, '');
+  if (!safeKey) return null;
+  
+  return {
+    path: `/api/${safeKey}`,
+    handler: (req, res) => {
+      res.json({
+        success: true,
+        endpoint: safeKey,
+        data: data,
+        count: Array.isArray(data) ? data.length : 1
+      });
+    }
+  };
+}
 
-// GET all data dari collection tertentu
-app.get('/api/:collection', (req, res) => {
-  const { collection } = req.params;
-  
-  if (db[collection]) {
-    res.json(db[collection]);
-  } else {
-    res.status(404).json({ error: `Collection '${collection}' not found` });
-  }
-});
-
-// GET data by ID dari collection tertentu
-app.get('/api/:collection/:id', (req, res) => {
-  const { collection, id } = req.params;
-  
-  if (!db[collection]) {
-    return res.status(404).json({ error: `Collection '${collection}' not found` });
-  }
-  
-  const item = db[collection].find(item => item.id == id);
-  
-  if (item) {
-    res.json(item);
-  } else {
-    res.status(404).json({ error: `Item with id '${id}' not found in collection '${collection}'` });
-  }
-});
-
-// POST - Reload database (merge ulang dari folder db/)
-app.post('/api/reload', (req, res) => {
-  console.log('Reloading database...');
-  
-  const mergeSuccess = mergeJsonFiles();
-  
-  if (mergeSuccess) {
-    db = reloadDatabase();
-    res.json({ 
-      success: true, 
-      message: 'Database reloaded successfully',
-      collections: Object.keys(db)
-    });
-  } else {
-    res.status(500).json({ 
-      success: false, 
-      message: 'Failed to reload database' 
-    });
-  }
-});
-
-// GET - Status database
-app.get('/api/status', (req, res) => {
-  const collections = Object.keys(db);
-  const status = {};
-  
-  collections.forEach(collection => {
-    status[collection] = {
-      count: Array.isArray(db[collection]) ? db[collection].length : 'Not an array',
-      type: Array.isArray(db[collection]) ? 'array' : typeof db[collection]
-    };
-  });
-  
+// Routes statis
+app.get('/', (req, res) => {
+  const availableEndpoints = Object.keys(database)
+    .map(key => key.replace(/[^a-zA-Z0-9-_]/g, ''))
+    .filter(key => key)
+    .map(key => `/api/${key}`);
+    
   res.json({
-    status: 'running',
-    collections: status,
-    lastReload: new Date().toISOString()
+    message: 'Backend API is running!',
+    status: 'OK',
+    availableEndpoints: availableEndpoints,
+    totalEndpoints: availableEndpoints.length,
+    timestamp: new Date().toISOString()
   });
 });
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: 'Something went wrong!' });
+app.get('/api', (req, res) => {
+  res.json({
+    message: 'API endpoints available',
+    data: Object.keys(database),
+    endpoints: Object.keys(database).map(key => `/api/${key.replace(/[^a-zA-Z0-9-_]/g, '')}`)
+  });
 });
 
-// 404 handler
+// Buat routes dinamis dengan cara yang lebih aman
+Object.keys(database).forEach(key => {
+  const route = createSafeRoute(key, database[key]);
+  if (route) {
+    console.log(`Creating route: ${route.path}`);
+    app.get(route.path, route.handler);
+  }
+});
+
+// Routes spesifik (fallback jika dynamic routing bermasalah)
+app.get('/api/dosen', (req, res) => {
+  if (database.dosen) {
+    res.json({
+      success: true,
+      data: database.dosen,
+      count: Array.isArray(database.dosen) ? database.dosen.length : 1
+    });
+  } else {
+    res.status(404).json({
+      error: 'Data dosen tidak ditemukan'
+    });
+  }
+});
+
+app.get('/api/matkul', (req, res) => {
+  if (database.matkul) {
+    res.json({
+      success: true,
+      data: database.matkul,
+      count: Array.isArray(database.matkul) ? database.matkul.length : 1
+    });
+  } else {
+    res.status(404).json({
+      error: 'Data matkul tidak ditemukan'
+    });
+  }
+});
+
+// Health check
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
+// 404 handler - menggunakan middleware biasa untuk menghindari masalah routing
 app.use((req, res) => {
-  res.status(404).json({ error: 'Endpoint not found' });
+  const availableEndpoints = Object.keys(database)
+    .map(key => key.replace(/[^a-zA-Z0-9-_]/g, ''))
+    .filter(key => key)
+    .map(key => `/api/${key}`);
+    
+  res.status(404).json({
+    error: 'Endpoint not found',
+    message: `Path '${req.originalUrl}' tidak ditemukan`,
+    availableEndpoints: availableEndpoints,
+    method: req.method
+  });
 });
 
-// Start server
-app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
-  
-  // Initialize database after server starts
-  initializeDatabase();
+// Error handler
+app.use((err, req, res, next) => {
+  console.error('Server error:', err);
+  res.status(500).json({
+    error: 'Internal server error',
+    message: err.message
+  });
 });
 
-// Graceful shutdown
-process.on('SIGINT', () => {
-  console.log('\nShutting down server...');
-  process.exit(0);
-});
+// Export untuk Vercel
+module.exports = app;
+
+// Start server (untuk development)
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+    console.log(`Available endpoints:`);
+    Object.keys(database).forEach(key => {
+      const safeKey = key.replace(/[^a-zA-Z0-9-_]/g, '');
+      if (safeKey) {
+        console.log(`  - http://localhost:${PORT}/api/${safeKey}`);
+      }
+    });
+  });
+}
