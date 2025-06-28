@@ -1,6 +1,6 @@
 // api/server.js
 const jsonServer = require('json-server');
-const { mergeJsonFiles } = require('../merge-json.cjs'); // sesuaikan path
+const { mergeJsonFiles } = require('./merge-json.cjs'); // sesuaikan path
 
 const server = jsonServer.create();
 const middlewares = jsonServer.defaults();
